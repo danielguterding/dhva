@@ -1,6 +1,6 @@
 #dhva
 
-dhva is a code for calculating de-Haas-van Alphen frequencies and electronic
+dhva is a code for calculating de Haas-van Alphen frequencies and electronic
 band masses from XCrySDen band-grid files. It works very similar to SKEAF by
 P.M.C. Rourke and S. R. Julian, but it is written in object-oriented C++ and
 offers different interpolation schemes.
