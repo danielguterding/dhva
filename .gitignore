@@ -1,0 +1,6 @@
+*~
+*.o
+dhva
+data
+data/*
+

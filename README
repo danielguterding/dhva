@@ -1,0 +1,153 @@
+#dhva
+
+dhva is a code for calculating de-Haas-van Alphen frequencies and electronic
+band masses from XCrySDen band-grid files. It works very similar to SKEAF by
+P.M.C. Rourke and S. R. Julian, but it is written in object-oriented C++ and
+offers different interpolation schemes.
+
+The basic approach is to construct a super cell of band energies, which is then
+cut into one k-point thick slices. On each of these slices the Fermi surface is
+detected and therefore de Haas-van Alphen orbits can be calculated. Arbitrary
+shapes reciprocal unit cell are supported.
+
+The construction of the super cell makes use of heavy interpolation on the 
+supplied band structure data. In this program a standard trilinear and a very 
+sophisticated tricubic interpolator are available. The tricubic interpolator is
+almost as fast as the trilinear one. Therefore use of the tricubic interpolator
+is advised.
+
+Output files are written to the subfolder "data/" and are named unambigously 
+according to the input file and the settings used during the run. Compared to 
+SKEAF the output is reduced to the essentials, i.e. the frequencies, masses and
+positions of the orbits with standard deviations.
+
+The command line program takes all possible settings as input parameters. 
+If you need assistance in using the program, please feel free to contact the 
+author.
+
+Most of the relevant ideas can be found in:
+  
+  Rourke, P.M.C. and Julian, S.R.: Numerical extraction of de Haas–van Alphen
+                                   frequencies from calculated band energies.
+                                   In: Computer Physics Communications (2012),
+                                   No. 183, p. 324–332
+                                   
+The tricubic interpolation scheme is described in:
+
+  Lekien, F. and Marsden, J.: Tricubic interpolation in three dimensions.
+                              In: International Journal for Numerical Methods
+                              in Engineering (2005), No. 63, p. 455-471
+
+If you have any questions about this code, encounter bugs or want support for
+other input file formats, please contact the author.
+
+##0. Building
+
+This chapter assumes that you are working in a standard Linux environment with
+tools like g++ and make already installed. The Eigen linear algebra library and
+Boost are required to compile this code. Both can be obtained and installed 
+easily on every Linux distribution.
+
+required:
+* [Eigen >=3.1.3](http://eigen.tuxfamily.org/)
+* [Boost >=1.48](http://www.boost.org/)
+
+After having installed the required dependencies, the source code can be
+downloaded and compiled. Adjusting the include path after "-I" in the makefile
+to the path where you installed Eigen is necessary.
+
+  git clone git://github.com/danielguterding/dhva.git
+  cd dhva
+  make
+  
+You should now have an executable named dhva in the dhva folder.
+
+##1. Scripting
+
+Python scripts are a nice way to issue multiple runs of command line programs.
+An example script that only needs a standard Python installation is given by 
+script.py.
+
+##2. Command line arguments
+
+dhva [string filepath]
+     [int nksc]
+     [float nsc]
+     [float phi]
+     [float theta]
+     [float maxkdiff]
+     [float maxfreqdiff]
+     [float minimumfreq]
+     [int ip]
+     [int go]
+     
+ string filepath
+Sets the path of the input-file containing the band data.
+
+ int nksc
+Specifies the number of k-points along one side of the super cell constructed
+from the input data. This is the switch that predominantly controls calculation
+accuracy. A value of 400 delivers reasonable accuracy while keeping the 
+run-time on a single core within a few minutes and using about 3.5GB of memory.
+
+ int nsc
+Sets the number of reciprocal unit cells along on side of the super cell. A 
+value of 4 to 6 delivers good accuracy with nksc set to about 400. Increasing
+the number of super cells will increase the number of real orbits found 
+compared to accidental matches.
+
+ float phi
+Sets the angle between magnetic field and kz-vector measured down towards the
+kx-ky-plane of the reciprocal unit cell in degrees. I.e. if all reciprocal unit
+vectors are perpendicular to each other, choosing a value of 90 will lead to a
+situation where the magnetic field is parallel to the kz-axis.
+ 
+ float theta
+Sets the angle of the magnetic field in the kx-ky-plane measured from the
+kx-axis in degrees.
+ 
+ float maxkdiff
+Sets the maximum k-space distance between orbit centers within a sheet measured
+in units of the reciprocal lattice vectors. If the distance between orbit
+centers is larger than maxkdiff, they will not be attributed to the same sheet.
+Thus setting maxkdiff to a value of zero will lead to no averaging, while a 
+value of one will lead to averaging over all orbits.
+A value of 0.05 is recommended.
+ 
+ float maxfreqdiff
+Sets the maximum relative frequency difference between neighbouring orbits in a
+sheet. If the frequency difference between orbits on neighbouring slices
+through the super cell is larger than maxfreqdiff, they will not be taken into
+account on the same sheet. Increase this value to average over a larger
+frequency range, if multiple frequencies very close to each other are detected.
+A value of 0.01 is recommended.
+ 
+ int ip
+Sets the interpolation algorithm to be used for constructing the super cell.
+Cubic interpolation delivers higher accuracy while linear interpolation is
+faster. For production runs use of the tricubic interpolator is recommended.
+== 0: Use linear interpolation.
+== 1: Use cubic interpolation.
+
+ int go
+Sets whether simple graphical ASCII output is desired or not. For production 
+runs this should be set to zero.
+== 0: Deactivate graphical output.
+== 1: Write graphical output to data folder.
+
+##License
+
+Copyright (c) 2013, Daniel Guterding <guterding@itp.uni-frankfurt.de>
+
+dhva is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+dhva is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with dhva. If not, see <http://www.gnu.org/licenses/>.
