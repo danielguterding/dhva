@@ -209,10 +209,10 @@ fptype TriCubicInterpolator::operator()(fptype x, fptype y, fptype z){
   dy -= yi;
   dz -= zi;
   int ijkn(0);
-  double dzpow(1);
-  double result(0);
+  fptype dzpow(1);
+  fptype result(0);
   for(int k = 0; k < 4; ++k) {
-    double dypow(1);
+    fptype dypow(1);
     for(int j = 0; j < 4; ++j) {
       result += dypow*dzpow*(_coefs[ijkn] + dx*(_coefs[ijkn+1] + dx*(_coefs[ijkn+2] + dx*_coefs[ijkn+3])));
       ijkn += 4;
