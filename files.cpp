@@ -89,7 +89,7 @@ void bxsf::read(){
   
   energies.resize(boost::extents[nkpoints[0]][nkpoints[1]][nkpoints[2]]); //holds energies on the k-point grid
   
-  if((nkpoints[0] * nkpoints[1] * nkpoints[2]) == energies_list.size()){
+  if(uint(nkpoints[0] * nkpoints[1] * nkpoints[2]) == energies_list.size()){
     for(int i=0;i<nkpoints[0];i++){
       for(int j=0;j<nkpoints[1];j++){
         for(int k=0;k<nkpoints[2];k++){
