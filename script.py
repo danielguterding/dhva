@@ -38,7 +38,7 @@ def main():
   
   for an in angles:
     phi = an #we scan a range of phi angles with fixed theta
-    command = './dhva %s %i %f %f %f %f %f %i %i' % (filename, nksc, nsc, phi, theta, maxkdiff, maxfdiff, minimumfreq, ip, go) 
+    command = './dhva %s %i %f %f %f %f %f %f %i %i' % (filename, nksc, nsc, phi, theta, maxkdiff, maxfdiff, minimumfreq, ip, go) 
     p = subprocess.Popen(command.split()) 
     p.wait()
     
