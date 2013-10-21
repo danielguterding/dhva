@@ -18,7 +18,7 @@
 #
 
 CXX      = g++
-CXXFLAGS = -Wall -march=native -O3 -I/home/user/local/include/eigen3
+CXXFLAGS = -Wall -march=native -O3 -flto -fuse-linker-plugin -I/home/user/local/include/eigen3
 LDFLAGS  = -lm -lboost_system -lboost_filesystem
 
 OBJECTS = main.o files.o tricubic.o trilinear.o ruc.o sc.o orbit.o eval.o
