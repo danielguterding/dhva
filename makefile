@@ -19,6 +19,7 @@
 
 CXX      = g++
 CXXFLAGS = -Wall -march=native -O3 -flto -fuse-linker-plugin -I/home/user/local/include/eigen3
+CXXFLAGS += -DNDEBUG -DBOOST_DISABLE_ASSERTS
 LDFLAGS  = -lm -lboost_system -lboost_filesystem
 
 OBJECTS = main.o files.o tricubic.o trilinear.o ruc.o sc.o orbit.o eval.o
