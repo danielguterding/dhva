@@ -131,7 +131,6 @@ class FrequencyCalculator{
     void group_orbits();
     void average_properties();
     int nsheets;
-    int nksc;
     fptype minimumfreq;
     fptype maxkdiff;
     fptype maxfreqdiff;
