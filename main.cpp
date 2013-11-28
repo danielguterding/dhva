@@ -110,7 +110,7 @@ int main(int argc, char* argv[]){
     boost::filesystem::path outfilepath = datadirstr + boost::lexical_cast<string>(
 					      boost::format("%s.%i_%i_%3.1f_%3.1f_%1.3f_%1.3f_%i_%i.out") 
 					      % filenamestr % settings.nksc % settings.nsc 
-					      % atof(argv[5]) % atof(argv[6]) % settings.maxkdiff 
+					      % (settings.phi*180.0/M_PI) % (settings.theta*180.0/M_PI) % settings.maxkdiff 
 					      % settings.maxfreqdiff % settings.minimumfreq % settings.ip);
     write_output(settings, outfilepath, freqcalc.get_properties());
     cout << "Finished writing output file." << endl;
