@@ -26,6 +26,7 @@ def main():
   jobfilename = "job.sh"
   
   filename = "data/input/example.bxsf"
+  inputinev = 1
   nksc = 400 #number of k-points along one side of the super cell
   nsc = 4 #number of reciprocal unit cells along one side of the super cell
   phi = 90 
@@ -38,7 +39,7 @@ def main():
   
   for an in angles:
     phi = an #we scan a range of phi angles with fixed theta
-    command = './dhva %s %i %f %f %f %f %f %f %i %i' % (filename, nksc, nsc, phi, theta, maxkdiff, maxfdiff, minimumfreq, ip, go) 
+    command = './dhva %s %i %i %f %f %f %f %f %f %i %i' % (filename, inputinev, nksc, nsc, phi, theta, maxkdiff, maxfdiff, minimumfreq, ip, go) 
     p = subprocess.Popen(command.split()) 
     p.wait()
     

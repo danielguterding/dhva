@@ -24,6 +24,7 @@
 #include "typedefs.hpp"
 
 struct GlobalSettings{
+  int inputinev; //specifies the units in which energies are given in input files, 0==Rydberg, 1==eV
   int nksc; //number of k-points along one edge of the super cell
   fptype nsc; //number of reciprocal unit cells along on edge of the super cell
   fptype phi; //angle between of the magnetic field measured down from z_RUC toward xy_RUC

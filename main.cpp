@@ -38,9 +38,10 @@ int main(int argc, char* argv[]){
   GlobalSettings settings;
   boost::filesystem::path filepath;
   
-  if(argc != 11){
+  if(argc != 12){
     cout << "Using precompiled settings." << endl;
     filepath = "sphere.bxsf";
+    settings.inputinev = 0;
     settings.nksc = 60;
     settings.nsc = 4.0;
     settings.phi = 90.0/180*M_PI;
@@ -54,15 +55,16 @@ int main(int argc, char* argv[]){
   else {
     cout << "Using command line settings." << endl;
     filepath = argv[1];
-    settings.nksc = atoi(argv[2]);
-    settings.nsc = atoi(argv[3]);
-    settings.phi = atof(argv[4])/180*M_PI;
-    settings.theta = atof(argv[5])/180*M_PI;
-    settings.maxkdiff = atof(argv[6]);
-    settings.maxfreqdiff = atof(argv[7]);
-    settings.minimumfreq = atof(argv[8]);
-    settings.ip = atoi(argv[9]);
-    settings.go = atoi(argv[10]);
+    settings.inputinev = atoi(argv[2]);
+    settings.nksc = atoi(argv[3]);
+    settings.nsc = atoi(argv[4]);
+    settings.phi = atof(argv[5])/180*M_PI;
+    settings.theta = atof(argv[6])/180*M_PI;
+    settings.maxkdiff = atof(argv[7]);
+    settings.maxfreqdiff = atof(argv[8]);
+    settings.minimumfreq = atof(argv[9]);
+    settings.ip = atoi(argv[10]);
+    settings.go = atoi(argv[11]);
   }
   
   string datadirstr = "data/";
@@ -74,7 +76,7 @@ int main(int argc, char* argv[]){
   }
   else{
     cout << "Started reading input file." << endl;
-    bxsf file(filepath);
+    bxsf file(filepath, settings.inputinev);
     cout << "Finished reading input file." << endl;
     
     cout << "Started reconstruction of reciprocal unit cell." << endl;
@@ -106,10 +108,10 @@ int main(int argc, char* argv[]){
     filenamestr.erase(0, 1);
     filenamestr.erase(filenamestr.size()-1);
     boost::filesystem::path outfilepath = datadirstr + boost::lexical_cast<string>(
-					      boost::format("%s.%i_%i_%3.1f_%3.1f_%1.3f_%1.3f_%i_%i.out") 
-					      % filenamestr % settings.nksc % settings.nsc % atof(argv[3])
-					      % atof(argv[4]) % settings.maxkdiff % settings.maxfreqdiff 
-					      % settings.minimumfreq % settings.ip);
+					      boost::format("%s.%i_%i_%i_%3.1f_%3.1f_%1.3f_%1.3f_%i_%i.out") 
+					      % filenamestr % settings.inputinev % settings.nksc % settings.nsc 
+					      % atof(argv[3]) % atof(argv[4]) % settings.maxkdiff 
+					      % settings.maxfreqdiff % settings.minimumfreq % settings.ip);
     write_output(settings, outfilepath, freqcalc.get_properties());
     cout << "Finished writing output file." << endl;
     

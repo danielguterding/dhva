@@ -36,7 +36,7 @@ using namespace std;
 
 class bxsf{
   public:
-    bxsf(boost::filesystem::path path);
+    bxsf(boost::filesystem::path path, int inputinev_in);
     boost::array<int, 3> get_nkpoints();
     boost::multi_array<fptype, 2> get_h();
     int get_bandnumber();
@@ -48,7 +48,7 @@ class bxsf{
     fptype fermi;
     boost::array<int, 3> nkpoints; //number is number of entries
     boost::multi_array<fptype, 2> h; //number is number of dimensions, number of elements must be set in constructor
-    int bandnumber;
+    int bandnumber, inputinev;
     vector<fptype> energies_list;
     boost::multi_array<fptype, 3> energies;
     void read();

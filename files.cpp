@@ -22,8 +22,9 @@
 
 // Functions for bxsf class
 
-bxsf::bxsf(boost::filesystem::path path){
+bxsf::bxsf(boost::filesystem::path path, int inputinev_in){
   
+  inputinev = inputinev_in;
   h.resize(boost::extents[3][3]); 
   filepath = path;
   read();
@@ -93,7 +94,10 @@ void bxsf::read(){
     for(int i=0;i<nkpoints[0];i++){
       for(int j=0;j<nkpoints[1];j++){
         for(int k=0;k<nkpoints[2];k++){
-	  energies[i][j][k] = RYDBERG2EV*energies_list[i*nkpoints[1]*nkpoints[2] + j*nkpoints[2] + k];
+	  energies[i][j][k] = energies_list[i*nkpoints[1]*nkpoints[2] + j*nkpoints[2] + k];
+	  if(!inputinev){
+	    energies[i][j][k] *= RYDBERG2EV;
+	  }
         }
       }
     }
