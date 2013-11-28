@@ -71,6 +71,7 @@ script.py.
 ##2. Command line arguments
 
 dhva [string filepath]
+     [int inputinev]
      [int nksc]
      [float nsc]
      [float phi]
@@ -83,6 +84,11 @@ dhva [string filepath]
      
  string filepath
 Sets the path of the input-file containing the band data.
+
+ int inputinev
+Specifies whether input energies are given in electron volts (eV) or Rydberg.
+== 0: Input energies are given in Rydberg.
+== 1: Input energies are given in eV.
 
  int nksc
 Specifies the number of k-points along one side of the super cell constructed
