@@ -456,8 +456,8 @@ bool FrequencyCalculator::orbit_extremal(int sheetindex, int orbitindex){
     ou = sheets[sheetindex][orbitindex+1];
   }
   
-  bool minimum = ((o.f < ou.f) && (o.f < ol.f));
-  bool maximum = ((o.f > ou.f) && (o.f > ol.f));
+  bool minimum = ((o.f <= ou.f) && (o.f <= ol.f));
+  bool maximum = ((o.f >= ou.f) && (o.f >= ol.f));
   bool extremal = (minimum || maximum);
   
   return extremal;
