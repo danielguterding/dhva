@@ -151,3 +151,4 @@ bool xcomp(OrbitPoint p1, OrbitPoint p2);
 bool ycomp(OrbitPoint p1, OrbitPoint p2);
 bool Bcomp(PossibleMatch o1, PossibleMatch o2);
 bool fcomp(ExtremalOrbitInRUC o1, ExtremalOrbitInRUC o2);
+bool fcompaveragedorbit(AveragedOrbit o1, AveragedOrbit o2);

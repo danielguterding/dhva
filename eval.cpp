@@ -255,6 +255,11 @@ bool ycomp(OrbitPoint p1, OrbitPoint p2){
   return (p1.y<p2.y); 
 }
 
+bool fcompaveragedorbit(AveragedOrbit o1, AveragedOrbit o2){
+  
+  return (o1.f<o2.f);
+}
+
 vector<vector<EvaluatedOrbit> > OrbitEvaluator::get_evaluated_orbits(){
   
   return res;
@@ -602,6 +607,9 @@ void FrequencyCalculator::average_properties(){
       averagevec.push_back(ao);
     }
   }
+  
+  //sort averaged groups by frequency
+  sort(averagevec.begin(), averagevec.end(), fcompaveragedorbit);
 }
 
 vector<AveragedOrbit> FrequencyCalculator::get_properties(){

@@ -108,9 +108,9 @@ int main(int argc, char* argv[]){
     filenamestr.erase(0, 1);
     filenamestr.erase(filenamestr.size()-1);
     boost::filesystem::path outfilepath = datadirstr + boost::lexical_cast<string>(
-					      boost::format("%s.%i_%i_%i_%3.1f_%3.1f_%1.3f_%1.3f_%i_%i.out") 
-					      % filenamestr % settings.inputinev % settings.nksc % settings.nsc 
-					      % atof(argv[3]) % atof(argv[4]) % settings.maxkdiff 
+					      boost::format("%s.%i_%i_%3.1f_%3.1f_%1.3f_%1.3f_%i_%i.out") 
+					      % filenamestr % settings.nksc % settings.nsc 
+					      % (settings.phi*180.0/M_PI) % (settings.theta*180.0/M_PI) % settings.maxkdiff 
 					      % settings.maxfreqdiff % settings.minimumfreq % settings.ip);
     write_output(settings, outfilepath, freqcalc.get_properties());
     cout << "Finished writing output file." << endl;
