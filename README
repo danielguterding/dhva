@@ -7,14 +7,13 @@ offers different interpolation schemes.
 
 The basic approach is to construct a super cell of band energies, which is then
 cut into one k-point thick slices. On each of these slices the Fermi surface is
-detected and therefore de Haas-van Alphen orbits can be calculated. Arbitrary
+detected and therefore, de Haas-van Alphen orbits can be calculated. Arbitrary
 shapes of the reciprocal unit cell are supported.
 
-The construction of the super cell makes use of heavy interpolation on the 
-supplied band structure data. In this program a standard trilinear and a very 
-sophisticated tricubic interpolator are available. The tricubic interpolator is
-almost as fast as the trilinear one. Therefore use of the tricubic interpolator
-is advised.
+The construction of the super cell makes use of interpolation on the supplied 
+band structure data. In this program a standard trilinear and a sophisticated 
+tricubic interpolator are available. The tricubic interpolator is almost as fast 
+as the trilinear one. Therefore, use of the tricubic interpolator is advised.
 
 Output files are written to the subfolder "data/" and are named unambigously 
 according to the input file and the settings used during the run. Compared to 
