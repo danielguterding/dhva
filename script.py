@@ -23,7 +23,6 @@ import subprocess
 def main():
   
   angles = range(-90,91,5) #sets the range of angles to scan
-  jobfilename = "job.sh"
   
   filename = "data/input/example.bxsf"
   inputinev = 1
