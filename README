@@ -65,7 +65,7 @@ You should now have an executable named dhva in the dhva folder.
 
 Python scripts are a nice way to issue multiple runs of command line programs.
 An example script that only needs a standard Python installation is given by 
-script.py.
+scripts/scanangles.py.
 
 ##2. Command line arguments
 
