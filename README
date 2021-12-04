@@ -105,7 +105,7 @@ compared to accidental matches.
 Sets the angle between magnetic field and kz-vector measured down towards the
 kx-ky-plane of the reciprocal unit cell in degrees. I.e. if all reciprocal unit
 vectors are perpendicular to each other, choosing a value of 90 will lead to a
-situation where the magnetic field is parallel to the kz-axis.
+situation where the magnetic field is perpendicular to the kz-axis.
  
  float theta
 Sets the angle of the magnetic field in the kx-ky-plane measured from the
