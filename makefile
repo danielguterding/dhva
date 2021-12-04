@@ -18,7 +18,7 @@
 #
 
 CXX      = g++
-CXXFLAGS = -Wall -O3 -I/home/user/local/eigen3
+CXXFLAGS = -Wall -O3 -I${HOME}/local/eigen3
 CXXFLAGS += -DNDEBUG -DBOOST_DISABLE_ASSERTS
 LDFLAGS  = -lm -lboost_system -lboost_filesystem
 

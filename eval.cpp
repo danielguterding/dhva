@@ -279,28 +279,15 @@ SheetMatcher::SheetMatcher(vector<vector<EvaluatedOrbit> > orbits_in){
     }
     matched.push_back(temp);
   }
-  
-  
-  for(int i=0;i<norbits[0];i++){ //exclude sc border orbits from search, there should be none anyway
-    matched[0][i] = true;
-  }
-  for(int i=0;i<norbits[nslices-1];i++){
-    matched[nslices-1][i] = true;
-  }
-  
-  int sum=0;
-  for(int i=0;i<int(norbits.size());i++){
-    sum+=norbits[i];
-  }
-  
-  if(sum > 0){ //only try to match if there are orbits, otherwise segfault
-    int i=1, j=0;
-    while(!matched[i][j]){
-      for(j=0;j<norbits[i];j++){
-        find_sheet(i, j);
+
+  for(int i=1;i<nslices-1;++i)
+  {
+    for(int j=0;j<norbits[i];++j)
+    {
+      if(!matched[i][j])
+      {
+        find_sheet(i,j);
       }
-      i++;
-      j=0;
     }
   }
 }
