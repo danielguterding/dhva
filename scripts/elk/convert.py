@@ -13,7 +13,7 @@ def get_kvecs_and_remove_2Pi(lines):
 
 def write_header(fin, fout, lines, nx, ny, nz, kvecs):
     fout.writelines(lines[:7])
-    fout.write(' {} {} {}\n'.format(nx, ny, nz))
+    fout.write(' {} {} {}\n'.format(nx - 1, ny - 1, nz - 1))
     fout.writelines(lines[8:9])
     for kx, ky, kz in kvecs:
         fout.write('     {0: 1.8f}     {1: 1.8f}     {2: 1.8f}\n'.format(kx, ky, kz))
