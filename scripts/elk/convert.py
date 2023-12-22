@@ -33,7 +33,7 @@ def get_energies_and_convert(lines, nx, ny, nz, startidx=13):
             break
     energies = np.array(energies)
     energies.resize((nx - 1, ny - 1, nz - 1))
-    energies *= 2  # Hartree to Rydberg
+    energies *= 2  # Hartree to Rydberg, assumes Fermi Energy is zero
     energies = energies.flatten()
     return energies, i + 1
 
