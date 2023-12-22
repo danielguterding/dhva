@@ -16,7 +16,7 @@ def get_kvecs_and_remove_2Pi(lines):
 
 def write_header(fin, fout, lines, nx, ny, nz, kvecs):
     fout.writelines(lines[:7])
-    fout.write(' {} {} {}\n'.format(nx - 1, ny - 1, nz - 1))
+    fout.write(' {} {} {}\n'.format(nx, ny, nz))
     fout.writelines(lines[8:9])
     for kx, ky, kz in kvecs:
         fout.write(
@@ -32,9 +32,7 @@ def get_energies_and_convert(lines, nx, ny, nz, startidx=13):
         if len(energies) >= ntot:
             break
     energies = np.array(energies)
-    energies.resize((nx - 1, ny - 1, nz - 1))
     energies *= 2  # Hartree to Rydberg, assumes Fermi Energy is zero
-    energies = energies.flatten()
     return energies, i + 1
 
 
