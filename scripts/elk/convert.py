@@ -19,10 +19,9 @@ def write_header(fin, fout, lines, nx, ny, nz, kvecs):
         fout.write('     {0: 1.8f}     {1: 1.8f}     {2: 1.8f}\n'.format(kx, ky, kz))
     fout.writelines(lines[12:13])
 
-def get_energies_and_convert(lines, nx, ny, nz):
+def get_energies_and_convert(lines, nx, ny, nz, startidx=13):
     energies = []
     ntot = nx * ny * nz
-    startidx = 13
     for i, l in enumerate(lines[startidx:], startidx):
         energies += [float(e) for e in l.strip().split()]
         if len(energies) >= ntot:
