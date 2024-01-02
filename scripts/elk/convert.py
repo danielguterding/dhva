@@ -2,29 +2,35 @@ import sys
 from math import ceil
 import numpy as np
 
+def find_bandgrid_3d_bands(lines):
+    for i, l in enumerate(lines):
+        if 'BANDGRID_3D_BANDS' in l:
+            return i
+    raise Exception('BANDGRID_3D_BANDS not found.')
 
 def get_num_kpoints(lines):
-    return [int(n) for n in lines[7].strip().split()]
-
+    i = find_bandgrid_3d_bands(lines) + 2
+    return [int(n) for n in lines[i].strip().split()]
 
 def get_kvecs_and_remove_2Pi(lines):
+    i = find_bandgrid_3d_bands(lines) + 4
     kvecs = []
-    for l in lines[9:12]:
+    for l in lines[i:i+3]:
         kvecs.append([float(k) * 0.5 / np.pi for k in l.strip().split()])
     return kvecs
 
 
-def write_header(fin, fout, lines, nx, ny, nz, kvecs):
-    fout.writelines(lines[:7])
-    fout.write(' {} {} {}\n'.format(nx, ny, nz))
-    fout.writelines(lines[8:9])
+def write_header(fout, lines, kvecs):
+    i = find_bandgrid_3d_bands(lines) + 4
+    fout.writelines(lines[:i])
     for kx, ky, kz in kvecs:
         fout.write(
             '     {0: 1.8f}     {1: 1.8f}     {2: 1.8f}\n'.format(kx, ky, kz))
     fout.writelines(lines[12:13])
 
 
-def get_energies_and_convert(lines, nx, ny, nz, startidx=13):
+def get_energies_and_convert(lines, nx, ny, nz):
+    startidx = find_bandgrid_3d_bands(lines) + 8
     energies = []
     ntot = nx * ny * nz
     for i, l in enumerate(lines[startidx:], startidx):
@@ -61,7 +67,7 @@ if __name__ == '__main__':
             lines = fin.readlines()
             nx, ny, nz = get_num_kpoints(lines)
             kvecs = get_kvecs_and_remove_2Pi(lines)
-            write_header(fin, fout, lines, nx, ny, nz, kvecs)
+            write_header(fout, lines, kvecs)
             energies, endidx = get_energies_and_convert(lines, nx, ny, nz)
             write_energies(fout, energies)
             write_footer(fout, lines, endidx)
