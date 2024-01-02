@@ -29,7 +29,8 @@ def write_header(fout, lines, kvecs):
     for kx, ky, kz in kvecs:
         fout.write(
             '     {0: 1.8f}     {1: 1.8f}     {2: 1.8f}\n'.format(kx, ky, kz))
-    fout.writelines(lines[12:13])
+    i += 3
+    fout.writelines(lines[i:i+1])
 
 
 def get_energies_and_convert(lines, nx, ny, nz):
