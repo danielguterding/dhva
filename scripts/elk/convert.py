@@ -2,15 +2,18 @@ import sys
 from math import ceil
 import numpy as np
 
+
 def find_bandgrid_3d_bands(lines):
     for i, l in enumerate(lines):
         if 'BANDGRID_3D_BANDS' in l:
             return i
     raise Exception('BANDGRID_3D_BANDS not found.')
 
+
 def get_num_kpoints(lines):
     i = find_bandgrid_3d_bands(lines) + 2
     return [int(n) for n in lines[i].strip().split()]
+
 
 def get_kvecs_and_remove_2Pi(lines):
     i = find_bandgrid_3d_bands(lines) + 4
