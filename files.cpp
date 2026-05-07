@@ -19,12 +19,19 @@
 
 //files.cpp
 #include "files.hpp"
+#include <stdexcept>
 
 // Functions for bxsf class
 
-bxsf::bxsf(boost::filesystem::path path, int inputinev_in){
+bxsf::bxsf(boost::filesystem::path path, int inputinev_in, int requested_bandnumber_in){
   
   inputinev = inputinev_in;
+  requested_bandnumber = requested_bandnumber_in;
+  bandnumber = -1;
+  fermi = 0;
+  for(int i=0;i<3;i++){
+    nkpoints[i] = 0;
+  }
   h.resize(boost::extents[3][3]); 
   filepath = path;
   read();
@@ -32,10 +39,19 @@ bxsf::bxsf(boost::filesystem::path path, int inputinev_in){
 
 void bxsf::read(){
   
-  int BANDNUMBER_PASSED = 0;
-  int END_BANDGRID_3D_PASSED = 0;
-  
+  bool grid_found = false;
+  bool fermi_found = false;
+  bool in_band = false;
+  int current_bandnumber = -1;
+  vector<fptype> current_band;
+  vector<int> bandnumbers;
+  vector<vector<fptype> > bands;
+
   boost::filesystem::ifstream filehandle(filepath);
+  if(!filehandle){
+    throw runtime_error("Could not open input file.");
+  }
+
   string line;
   while(getline(filehandle, line)){
     if(line.find("Fermi Energy:") != string::npos){
@@ -43,11 +59,13 @@ void bxsf::read(){
       line = trim_all(line); //erase trailing and leading spaces, reduce intermediate spaces to one space
       boost::split(linestr, line, boost::is_any_of("\t "));
       fermi = boost::lexical_cast<fptype>(linestr[2]);
+      fermi_found = true;
     }
     
-    if(line.find("BANDGRID_3D_BANDS") != string::npos){
+    if((line.find("BANDGRID_3D_BANDS") != string::npos) || (line.find("BEGIN_BANDGRID_3D") != string::npos)){
       vector<string> linestr;
-      getline(filehandle, line); //skip useless line
+      grid_found = true;
+      getline(filehandle, line); //number of bands
       getline(filehandle, line); //this line contains nkpoints
       line = trim_all(line);
       boost::split(linestr, line, boost::is_any_of("\t "));
@@ -60,50 +78,128 @@ void bxsf::read(){
         line = trim_all(line);
         boost::split(linestr, line, boost::is_any_of("\t "));
         for(int i=0;i<3;i++){
-	  h[j][i] = 2*M_PI*INVBOHR2INVANGSTROM*boost::lexical_cast<fptype>(linestr[i]); //reciprocal lattice vectors are given in bohr^-1 and without 2PI prefactor
+          h[j][i] = 2*M_PI*INVBOHR2INVANGSTROM*boost::lexical_cast<fptype>(linestr[i]); //reciprocal lattice vectors are given in bohr^-1 and without 2PI prefactor
         }
       }
+      continue;
     }
     
     if(line.find("BAND:") != string::npos){
+      if(in_band){
+        bandnumbers.push_back(current_bandnumber);
+        bands.push_back(current_band);
+        current_band.clear();
+      }
       vector<string> linestr;
       line = trim_all(line);
       boost::split(linestr, line, boost::is_any_of("\t "));
-      bandnumber = boost::lexical_cast<int>(linestr[1]);
-      BANDNUMBER_PASSED = 1;
+      current_bandnumber = boost::lexical_cast<int>(linestr[1]);
+      in_band = true;
+      continue;
     }
     
     if(line.find("END_BANDGRID_3D") != string::npos){
-      END_BANDGRID_3D_PASSED = 1;
+      if(in_band){
+        bandnumbers.push_back(current_bandnumber);
+        bands.push_back(current_band);
+        current_band.clear();
+        in_band = false;
+      }
+      break;
     }
     
-    if((1 == BANDNUMBER_PASSED) && (0 == END_BANDGRID_3D_PASSED) && (line.find("BAND:") == string::npos)){
+    if(in_band){
       vector<string> linestr;
       line = trim_all(line);
+      if(line.empty()){
+        continue;
+      }
       boost::split(linestr, line, boost::is_any_of("\t "));
       for(int i=0;i<int(linestr.size());i++){
-	energies_list.push_back(boost::lexical_cast<fptype>(linestr[i]) - fermi); //fermi energy is substracted
+	current_band.push_back(boost::lexical_cast<fptype>(linestr[i]) - fermi); //fermi energy is substracted
       }
     }
   }
   filehandle.close();
   
-  energies.resize(boost::extents[nkpoints[0]][nkpoints[1]][nkpoints[2]]); //holds energies on the k-point grid
-  
-  if(uint(nkpoints[0] * nkpoints[1] * nkpoints[2]) == energies_list.size()){
-    for(int i=0;i<nkpoints[0];i++){
-      for(int j=0;j<nkpoints[1];j++){
-        for(int k=0;k<nkpoints[2];k++){
-	  energies[i][j][k] = energies_list[i*nkpoints[1]*nkpoints[2] + j*nkpoints[2] + k];
-	  if(!inputinev){
-	    energies[i][j][k] *= RYDBERG2EV;
-	  }
-        }
-      }
+  if(!fermi_found){
+    throw runtime_error("Fermi energy not found in input file.");
+  }
+  if(!grid_found){
+    throw runtime_error("BXSF band grid not found. Expected BANDGRID_3D_BANDS or BEGIN_BANDGRID_3D.");
+  }
+  if(bands.empty()){
+    throw runtime_error("No BAND blocks found in input file.");
+  }
+
+  size_t expected_size = size_t(nkpoints[0]) * size_t(nkpoints[1]) * size_t(nkpoints[2]);
+  for(int i=0;i<int(bands.size());i++){
+    if(bands[i].size() != expected_size){
+      throw runtime_error(string("Number of energy values in band ") + boost::lexical_cast<string>(bandnumbers[i]) + " does not match gridsize.");
     }
   }
+
+  int selected_band = -1;
+  if(requested_bandnumber > 0){
+    for(int i=0;i<int(bandnumbers.size());i++){
+      if(bandnumbers[i] == requested_bandnumber){
+        selected_band = i;
+      }
+    }
+    if(selected_band < 0){
+      throw runtime_error(string("Requested band ") + boost::lexical_cast<string>(requested_bandnumber) + " not found in input file.");
+    }
+  }
+  else if(bands.size() == 1){
+    selected_band = 0;
+  }
   else{
-    printf("Error: Number of energy values does not match gridsize.\n");
+    vector<int> crossing_bands;
+    for(int i=0;i<int(bands.size());i++){
+      fptype min_energy = bands[i][0];
+      fptype max_energy = bands[i][0];
+      for(int j=1;j<int(bands[i].size());j++){
+        if(bands[i][j] < min_energy){
+          min_energy = bands[i][j];
+        }
+        if(bands[i][j] > max_energy){
+          max_energy = bands[i][j];
+        }
+      }
+      if((min_energy <= 0) && (max_energy >= 0)){
+        crossing_bands.push_back(i);
+      }
+    }
+
+    if(crossing_bands.size() == 1){
+      selected_band = crossing_bands[0];
+    }
+    else if(crossing_bands.empty()){
+      throw runtime_error("No band crosses the Fermi energy. Supply an explicit band number as the final command line argument if this is intended.");
+    }
+    else{
+      string msg = "Multiple bands cross the Fermi energy:";
+      for(int i=0;i<int(crossing_bands.size());i++){
+        msg += " ";
+        msg += boost::lexical_cast<string>(bandnumbers[crossing_bands[i]]);
+      }
+      msg += ". Supply one of these band numbers as the final command line argument.";
+      throw runtime_error(msg);
+    }
+  }
+
+  bandnumber = bandnumbers[selected_band];
+  energies_list = bands[selected_band];
+  energies.resize(boost::extents[nkpoints[0]][nkpoints[1]][nkpoints[2]]); //holds energies on the k-point grid
+  for(int i=0;i<nkpoints[0];i++){
+    for(int j=0;j<nkpoints[1];j++){
+      for(int k=0;k<nkpoints[2];k++){
+	energies[i][j][k] = energies_list[i*nkpoints[1]*nkpoints[2] + j*nkpoints[2] + k];
+	if(!inputinev){
+	  energies[i][j][k] *= RYDBERG2EV;
+	}
+      }
+    }
   }
 }
 
@@ -149,12 +245,15 @@ void mkdir(boost::filesystem::path dir){
   }
 }
 
-void write_output(GlobalSettings settings, boost::filesystem::path outfilepath, vector<AveragedOrbit> ao){
+void write_output(GlobalSettings settings, boost::filesystem::path outfilepath, vector<AveragedOrbit> ao, int bandnumber){
   
   boost::filesystem::ofstream outfilehandle(outfilepath);
   int naverages = ao.size();
   
   outfilehandle << boost::lexical_cast<string>(boost::format("# nksc : %i") % settings.nksc) << endl;
+  if(bandnumber > 0){
+    outfilehandle << boost::lexical_cast<string>(boost::format("# band : %i") % bandnumber) << endl;
+  }
   outfilehandle << boost::lexical_cast<string>(boost::format("# phi : %f") % (settings.phi*180.0/M_PI)) << endl;
   outfilehandle << boost::lexical_cast<string>(boost::format("# theta : %f") % (settings.theta*180.0/M_PI)) << endl;
   outfilehandle << boost::lexical_cast<string>(boost::format("# maxkdiff : %f") % settings.maxkdiff) << endl;

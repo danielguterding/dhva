@@ -37,8 +37,9 @@ int main(int argc, char* argv[]){
   
   GlobalSettings settings;
   boost::filesystem::path filepath;
+  int requested_bandnumber = -1;
   
-  if(argc != 12){
+  if((argc != 12) && (argc != 13)){
     cout << "Using precompiled settings." << endl;
     filepath = "sphere.bxsf";
     settings.inputinev = 0;
@@ -65,6 +66,9 @@ int main(int argc, char* argv[]){
     settings.minimumfreq = atof(argv[9]);
     settings.ip = atoi(argv[10]);
     settings.go = atoi(argv[11]);
+    if(argc == 13){
+      requested_bandnumber = atoi(argv[12]);
+    }
   }
   
   string datadirstr = "data/";
@@ -73,76 +77,84 @@ int main(int argc, char* argv[]){
   
   if(!boost::filesystem::exists(filepath)){
     printf("Error. Input file does not exist.\n");
+    return 1;
   }
   else{
-    cout << "Started reading input file." << endl;
-    bxsf file(filepath, settings.inputinev);
-    cout << "Finished reading input file." << endl;
+    try{
+      cout << "Started reading input file." << endl;
+      bxsf file(filepath, settings.inputinev, requested_bandnumber);
+      cout << "Finished reading input file." << endl;
+      cout << "Using band " << file.get_bandnumber() << "." << endl;
     
-    cout << "Started reconstruction of reciprocal unit cell." << endl;
-    ReciprocalUnitCell ruc(file.get_nkpoints(), file.get_h(), file.get_energies());
-    cout << "Finished reconstruction of reciprocal unit cell." << endl;
+      cout << "Started reconstruction of reciprocal unit cell." << endl;
+      ReciprocalUnitCell ruc(file.get_nkpoints(), file.get_h(), file.get_energies());
+      cout << "Finished reconstruction of reciprocal unit cell." << endl;
     
-    cout << "Started populating super cell." << endl;
-    SuperCell sc(settings, ruc);
-    cout << "Finished populating super cell." << endl;
+      cout << "Started populating super cell." << endl;
+      SuperCell sc(settings, ruc);
+      cout << "Finished populating super cell." << endl;
     
-    cout << "Started orbit detection." << endl;
-    OrbitFinder orbit(settings, sc);
-    cout << "Finished orbit detection." << endl;
+      cout << "Started orbit detection." << endl;
+      OrbitFinder orbit(settings, sc);
+      cout << "Finished orbit detection." << endl;
     
-    cout << "Started evaluating orbits." << endl;
-    OrbitEvaluator eval(orbit.get_orbits_pointer(), sc.get_sc_length(), settings.nsc);
-    cout << "Finished evaluating orbits." << endl;
+      cout << "Started evaluating orbits." << endl;
+      OrbitEvaluator eval(orbit.get_orbits_pointer(), sc.get_sc_length(), settings.nsc);
+      cout << "Finished evaluating orbits." << endl;
     
-    cout << "Started matching fermi surface sheets." << endl;
-    SheetMatcher match(eval.get_evaluated_orbits());
-    cout << "Finished matching fermi surface sheets." << endl;
+      cout << "Started matching fermi surface sheets." << endl;
+      SheetMatcher match(eval.get_evaluated_orbits());
+      cout << "Finished matching fermi surface sheets." << endl;
     
-    cout << "Started singling out extremal frequencies." << endl;
-    FrequencyCalculator freqcalc(settings, match.get_sheets(), ruc.get_h());
-    cout << "Finished singling out extremal frequencies." << endl;
+      cout << "Started singling out extremal frequencies." << endl;
+      FrequencyCalculator freqcalc(settings, match.get_sheets(), ruc.get_h());
+      cout << "Finished singling out extremal frequencies." << endl;
     
-    cout << "Starting to write output file." << endl;
-    string filenamestr = boost::lexical_cast<string>(filepath.filename());
-    filenamestr.erase(0, 1);
-    filenamestr.erase(filenamestr.size()-1);
-    boost::filesystem::path outfilepath = datadirstr + boost::lexical_cast<string>(
-					      boost::format("%s.%i_%i_%3.1f_%3.1f_%1.3f_%1.3f_%i_%i.out") 
-					      % filenamestr % settings.nksc % settings.nsc 
-					      % (settings.phi*180.0/M_PI) % (settings.theta*180.0/M_PI) % settings.maxkdiff 
-					      % settings.maxfreqdiff % settings.minimumfreq % settings.ip);
-    write_output(settings, outfilepath, freqcalc.get_properties());
-    cout << "Finished writing output file." << endl;
+      cout << "Starting to write output file." << endl;
+      string filenamestr = boost::lexical_cast<string>(filepath.filename());
+      filenamestr.erase(0, 1);
+      filenamestr.erase(filenamestr.size()-1);
+      boost::filesystem::path outfilepath = datadirstr + boost::lexical_cast<string>(
+					        boost::format("%s.%i_%i_%3.1f_%3.1f_%1.3f_%1.3f_%i_%i.out")
+					        % filenamestr % settings.nksc % settings.nsc
+					        % (settings.phi*180.0/M_PI) % (settings.theta*180.0/M_PI) % settings.maxkdiff
+					        % settings.maxfreqdiff % settings.minimumfreq % settings.ip);
+      write_output(settings, outfilepath, freqcalc.get_properties(), file.get_bandnumber());
+      cout << "Finished writing output file." << endl;
     
-    if(settings.go == 1){
-      cout << "Started writing graphical output." << endl;
+      if(settings.go == 1){
+        cout << "Started writing graphical output." << endl;
       
-      boost::multi_array<fptype,3> energies;
-      energies.resize(boost::extents[settings.nksc][settings.nksc][settings.nksc]);
-      energies = sc.get_energies();
+        boost::multi_array<fptype,3> energies;
+        energies.resize(boost::extents[settings.nksc][settings.nksc][settings.nksc]);
+        energies = sc.get_energies();
     
-      for(int k=1;k<settings.nksc-1;k++){
-        boost::filesystem::path outfilepath3(boost::lexical_cast<string>(boost::format("data/graphical%03i.txt") % k));
-        boost::filesystem::ofstream outfilehandle3(outfilepath3);
+        for(int k=1;k<settings.nksc-1;k++){
+          boost::filesystem::path outfilepath3(boost::lexical_cast<string>(boost::format("data/graphical%03i.txt") % k));
+          boost::filesystem::ofstream outfilehandle3(outfilepath3);
    
-        for(int i=settings.nksc-1;i>-1;i--){
-          string line = boost::lexical_cast<string>(boost::format("%3i ") % i);
-          for(int j=0;j<settings.nksc;j++){
-	     if(energies[i][j][k] > 0){
-	       line += "1";
-	     }
-	     else{
-	       line += "0";
-	     }
+          for(int i=settings.nksc-1;i>-1;i--){
+            string line = boost::lexical_cast<string>(boost::format("%3i ") % i);
+            for(int j=0;j<settings.nksc;j++){
+	      if(energies[i][j][k] > 0){
+	        line += "1";
+	      }
+	      else{
+	        line += "0";
+	      }
+            }
+            outfilehandle3 << line << endl;
           }
-          outfilehandle3 << line << endl;
+          outfilehandle3.close();
         }
-        outfilehandle3.close();
+        cout << "Finished writing graphical output." << endl;
       }
-      cout << "Finished writing graphical output." << endl;
+      cout << "Program finished." << endl;
     }
-    cout << "Program finished." << endl;
+    catch(const exception& e){
+      cerr << "Error. " << e.what() << endl;
+      return 1;
+    }
   }
   
   return 0;
