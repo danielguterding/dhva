@@ -23,10 +23,48 @@
 
 // Functions for bxsf class
 
-bxsf::bxsf(boost::filesystem::path path, int inputinev_in, int requested_bandnumber_in){
+BXSFKVectorUnit parse_kvector_unit(string unitstr){
+
+  unitstr = boost::to_lower_copy(unitstr);
+  if((unitstr == "legacy") || (unitstr == "bohr-no-2pi") || (unitstr == "bohr_no_2pi") || (unitstr == "crystal-bohr") || (unitstr == "crystal_bohr")){
+    return BXSF_KVECTOR_LEGACY;
+  }
+  if((unitstr == "angstrom") || (unitstr == "angstrom^-1") || (unitstr == "a^-1") || (unitstr == "invang") || (unitstr == "vaspkit")){
+    return BXSF_KVECTOR_ANGSTROM;
+  }
+  if((unitstr == "bohr") || (unitstr == "bohr^-1") || (unitstr == "invbohr")){
+    return BXSF_KVECTOR_BOHR;
+  }
+  if((unitstr == "angstrom-no-2pi") || (unitstr == "angstrom_no_2pi") || (unitstr == "crystal-angstrom") || (unitstr == "crystal_angstrom")){
+    return BXSF_KVECTOR_ANGSTROM_NO_2PI;
+  }
+
+  throw runtime_error(string("Unknown reciprocal-vector unit '") + unitstr + "'. Use legacy, angstrom, bohr, or angstrom-no-2pi.");
+}
+
+string kvector_unit_name(BXSFKVectorUnit unit){
+
+  if(unit == BXSF_KVECTOR_LEGACY){
+    return "legacy";
+  }
+  if(unit == BXSF_KVECTOR_ANGSTROM){
+    return "angstrom";
+  }
+  if(unit == BXSF_KVECTOR_BOHR){
+    return "bohr";
+  }
+  if(unit == BXSF_KVECTOR_ANGSTROM_NO_2PI){
+    return "angstrom-no-2pi";
+  }
+
+  return "unknown";
+}
+
+bxsf::bxsf(boost::filesystem::path path, int inputinev_in, int requested_bandnumber_in, BXSFKVectorUnit kvector_unit_in){
   
   inputinev = inputinev_in;
   requested_bandnumber = requested_bandnumber_in;
+  kvector_unit = kvector_unit_in;
   bandnumber = -1;
   fermi = 0;
   for(int i=0;i<3;i++){
@@ -35,6 +73,24 @@ bxsf::bxsf(boost::filesystem::path path, int inputinev_in, int requested_bandnum
   h.resize(boost::extents[3][3]); 
   filepath = path;
   read();
+}
+
+fptype bxsf::kvector_unit_conversion_factor(){
+
+  if(kvector_unit == BXSF_KVECTOR_LEGACY){
+    return 2*M_PI*INVBOHR2INVANGSTROM;
+  }
+  if(kvector_unit == BXSF_KVECTOR_ANGSTROM){
+    return 1.0;
+  }
+  if(kvector_unit == BXSF_KVECTOR_BOHR){
+    return INVBOHR2INVANGSTROM;
+  }
+  if(kvector_unit == BXSF_KVECTOR_ANGSTROM_NO_2PI){
+    return 2*M_PI;
+  }
+
+  throw runtime_error("Unknown reciprocal-vector unit.");
 }
 
 void bxsf::read(){
@@ -73,12 +129,13 @@ void bxsf::read(){
 	nkpoints[i] = boost::lexical_cast<int>(linestr[i]);
       }
       getline(filehandle, line); //grid origin line
+      fptype kvector_factor = kvector_unit_conversion_factor();
       for(int j=0;j<3;j++){
         getline(filehandle, line); //lines of the reciprocal unit cell matrix
         line = trim_all(line);
         boost::split(linestr, line, boost::is_any_of("\t "));
         for(int i=0;i<3;i++){
-          h[j][i] = 2*M_PI*INVBOHR2INVANGSTROM*boost::lexical_cast<fptype>(linestr[i]); //reciprocal lattice vectors are given in bohr^-1 and without 2PI prefactor
+          h[j][i] = kvector_factor*boost::lexical_cast<fptype>(linestr[i]);
         }
       }
       continue;
@@ -245,7 +302,7 @@ void mkdir(boost::filesystem::path dir){
   }
 }
 
-void write_output(GlobalSettings settings, boost::filesystem::path outfilepath, vector<AveragedOrbit> ao, int bandnumber){
+void write_output(GlobalSettings settings, boost::filesystem::path outfilepath, vector<AveragedOrbit> ao, int bandnumber, BXSFKVectorUnit kvector_unit){
   
   boost::filesystem::ofstream outfilehandle(outfilepath);
   int naverages = ao.size();
@@ -254,6 +311,7 @@ void write_output(GlobalSettings settings, boost::filesystem::path outfilepath, 
   if(bandnumber > 0){
     outfilehandle << boost::lexical_cast<string>(boost::format("# band : %i") % bandnumber) << endl;
   }
+  outfilehandle << boost::lexical_cast<string>(boost::format("# kvector unit : %s") % kvector_unit_name(kvector_unit)) << endl;
   outfilehandle << boost::lexical_cast<string>(boost::format("# phi : %f") % (settings.phi*180.0/M_PI)) << endl;
   outfilehandle << boost::lexical_cast<string>(boost::format("# theta : %f") % (settings.theta*180.0/M_PI)) << endl;
   outfilehandle << boost::lexical_cast<string>(boost::format("# maxkdiff : %f") % settings.maxkdiff) << endl;

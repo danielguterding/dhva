@@ -34,9 +34,19 @@ using namespace std;
 #ifndef __BXSF_H_INCLUDED__
 #define __BXSF_H_INCLUDED__
 
+enum BXSFKVectorUnit{
+  BXSF_KVECTOR_LEGACY,
+  BXSF_KVECTOR_ANGSTROM,
+  BXSF_KVECTOR_BOHR,
+  BXSF_KVECTOR_ANGSTROM_NO_2PI
+};
+
+BXSFKVectorUnit parse_kvector_unit(string unitstr);
+string kvector_unit_name(BXSFKVectorUnit unit);
+
 class bxsf{
   public:
-    bxsf(boost::filesystem::path path, int inputinev_in, int requested_bandnumber_in = -1);
+    bxsf(boost::filesystem::path path, int inputinev_in, int requested_bandnumber_in = -1, BXSFKVectorUnit kvector_unit_in = BXSF_KVECTOR_LEGACY);
     boost::array<int, 3> get_nkpoints();
     boost::multi_array<fptype, 2> get_h();
     int get_bandnumber();
@@ -49,13 +59,15 @@ class bxsf{
     boost::array<int, 3> nkpoints; //number is number of entries
     boost::multi_array<fptype, 2> h; //number is number of dimensions, number of elements must be set in constructor
     int bandnumber, inputinev, requested_bandnumber;
+    BXSFKVectorUnit kvector_unit;
     vector<fptype> energies_list;
     boost::multi_array<fptype, 3> energies;
     void read();
+    fptype kvector_unit_conversion_factor();
 };
 
 #endif
 
 string trim_all(const std::string &str);
 void mkdir(boost::filesystem::path dir);
-void write_output(GlobalSettings settings, boost::filesystem::path outfilepath, vector<AveragedOrbit> ao, int bandnumber = -1);
+void write_output(GlobalSettings settings, boost::filesystem::path outfilepath, vector<AveragedOrbit> ao, int bandnumber = -1, BXSFKVectorUnit kvector_unit = BXSF_KVECTOR_LEGACY);

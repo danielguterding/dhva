@@ -20,6 +20,7 @@
 //main.cpp
 #include <iostream>
 #include <string>
+#include <cctype>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/lexical_cast.hpp>
@@ -33,13 +34,37 @@
 #include "eval.hpp"
 using namespace std;
 
+bool is_integer_argument(const string& str){
+
+  if(str.empty()){
+    return false;
+  }
+
+  size_t first_digit = 0;
+  if((str[0] == '+') || (str[0] == '-')){
+    first_digit = 1;
+  }
+  if(first_digit == str.size()){
+    return false;
+  }
+
+  for(size_t i=first_digit;i<str.size();i++){
+    if(!isdigit(str[i])){
+      return false;
+    }
+  }
+
+  return true;
+}
+
 int main(int argc, char* argv[]){
   
   GlobalSettings settings;
   boost::filesystem::path filepath;
   int requested_bandnumber = -1;
+  BXSFKVectorUnit kvector_unit = BXSF_KVECTOR_LEGACY;
   
-  if((argc != 12) && (argc != 13)){
+  if((argc < 12) || (argc > 14)){
     cout << "Using precompiled settings." << endl;
     filepath = "sphere.bxsf";
     settings.inputinev = 0;
@@ -66,8 +91,20 @@ int main(int argc, char* argv[]){
     settings.minimumfreq = atof(argv[9]);
     settings.ip = atoi(argv[10]);
     settings.go = atoi(argv[11]);
-    if(argc == 13){
-      requested_bandnumber = atoi(argv[12]);
+    try{
+      for(int i=12;i<argc;i++){
+        string arg = argv[i];
+        if(is_integer_argument(arg)){
+          requested_bandnumber = atoi(argv[i]);
+        }
+        else{
+          kvector_unit = parse_kvector_unit(arg);
+        }
+      }
+    }
+    catch(const exception& e){
+      cerr << "Error. " << e.what() << endl;
+      return 1;
     }
   }
   
@@ -82,9 +119,10 @@ int main(int argc, char* argv[]){
   else{
     try{
       cout << "Started reading input file." << endl;
-      bxsf file(filepath, settings.inputinev, requested_bandnumber);
+      bxsf file(filepath, settings.inputinev, requested_bandnumber, kvector_unit);
       cout << "Finished reading input file." << endl;
       cout << "Using band " << file.get_bandnumber() << "." << endl;
+      cout << "Using reciprocal-vector unit " << kvector_unit_name(kvector_unit) << "." << endl;
     
       cout << "Started reconstruction of reciprocal unit cell." << endl;
       ReciprocalUnitCell ruc(file.get_nkpoints(), file.get_h(), file.get_energies());
@@ -119,7 +157,7 @@ int main(int argc, char* argv[]){
 					        % filenamestr % settings.nksc % settings.nsc
 					        % (settings.phi*180.0/M_PI) % (settings.theta*180.0/M_PI) % settings.maxkdiff
 					        % settings.maxfreqdiff % settings.minimumfreq % settings.ip);
-      write_output(settings, outfilepath, freqcalc.get_properties(), file.get_bandnumber());
+      write_output(settings, outfilepath, freqcalc.get_properties(), file.get_bandnumber(), kvector_unit);
       cout << "Finished writing output file." << endl;
     
       if(settings.go == 1){

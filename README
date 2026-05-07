@@ -81,6 +81,7 @@ dhva [string filepath]
      [int ip]
      [int go]
      [int bandnumber] (optional)
+     [string kvectorunit] (optional)
      
  string filepath
 Sets the path of the input-file containing the band data.
@@ -145,6 +146,19 @@ runs this should be set to zero.
 Selects a band from multi-band BXSF files. If omitted, dhva automatically uses
 the only band that crosses the Fermi energy. If multiple bands cross the Fermi
 energy, specify the desired band number explicitly.
+
+ string kvectorunit (optional)
+Selects the unit convention for BXSF reciprocal lattice vectors. This cannot be
+detected reliably from the BXSF numbers alone. The default is "legacy", matching
+older dhva behavior.
+== legacy: reciprocal vectors are in bohr^-1 and do not include the 2*pi factor.
+== angstrom: reciprocal vectors are already in Angstrom^-1, including 2*pi.
+== bohr: reciprocal vectors are already in bohr^-1, including 2*pi.
+== angstrom-no-2pi: reciprocal vectors are in Angstrom^-1 without 2*pi.
+
+The optional bandnumber and kvectorunit arguments may be supplied in either
+order. Use "angstrom" for VASPKIT BXSF files whose reciprocal vectors are in
+Angstrom^-1.
 
 ##License
 
